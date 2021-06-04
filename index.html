@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans&family=Nunito:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <title>Project</title>
+  </head>
+
+  <body>
+    <div class="content">
+      <div class="container">
+        <div class="title">
+          <h1>Учет моих расходов</h1>
+        </div>
+        <div class="block">
+          <div class="item">
+            <p>Куда было потрачено:</p>
+            <input
+              class="text1"
+              type="text"
+              id="add-cost"
+              placeholder="Куда было потрачено"
+            />
+          </div>
+          <div class="item">
+            <p>Сколько было потрачено:</p>
+            <input
+              class="text2"
+              type="number"
+              id="add-cost2"
+              placeholder="Сколько было потрачено"
+            />
+          </div>
+          <div>
+            <button onclick="onclickButton()" class="btn">Добавить</button>
+          </div>
+        </div>
+        <div class="total">
+          Итого:
+          <p class="numb" id="sum">0</p>
+          ₽
+        </div>
+        <div class="cost-text" id="content-page"></div>
+      </div>
+    </div>
+  </body>
+
+  <script src="script.js"></script>
+</html>
