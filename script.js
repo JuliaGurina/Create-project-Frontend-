@@ -1,19 +1,15 @@
 let allCosts = [];
 let valueInput = "";
 let valueInput2 = "";
-let d = new Date();
-let dateTime =
-  ("0" + d.getDate()).slice(-2) +
-  "." +
-  ("0" + (d.getMonth() + 1)).slice(-2) +
-  "." +
-  d.getFullYear();
 let indexEdit = -1;
 let tempEdit = "";
 let tempEdit2 = "";
-let tempEditDate = "";
+let d = new Date().toISOString().slice(0, 10);
+let tempEditDate = d;
+let tempEditDateNew = "";
+let tempEditDateNew2 = null;
 
-window.onload = function init() {
+window.onload = async function init() {
   totalSum = document.getElementById("sum");
   input = document.getElementById("add-cost");
   input.addEventListener("change", updateValue1);
@@ -22,22 +18,41 @@ window.onload = function init() {
   //BUTTON 'Enter'
   input.addEventListener("keyup", updateValue3);
   input2.addEventListener("keyup", updateValue4);
+  const resp = await fetch("http://localhost:8000/allCosts", {
+    method: "GET",
+  });
+  let result = await resp.json();
+  allCosts = result.data;
+  render();
 };
 
-const onclickButton = () => {
+const onclickButton = async () => {
   let a = valueInput.trim();
   let b = valueInput2.trim();
   if (a === "") return alert(" Введите текст");
   if (b === "") return alert(" Введите число");
-  allCosts.push({
-    text: valueInput,
-    text2: dateTime,
-    text3: valueInput2,
-  });
-  valueInput = "";
-  input.value = "";
-  valueInput2 = "";
-  input2.value = "";
+  if (String(b).length > 8) return alert("Много цифр");
+  {
+    const resp = await fetch("http://localhost:8000/createCost", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=utf-8",
+        "Access-Control-Allow_origin": "*",
+      },
+      body: JSON.stringify({
+        text: valueInput,
+        text2: tempEditDate,
+        text3: valueInput2,
+      }),
+    });
+    let result = await resp.json();
+    allCosts.push(result.data);
+
+    valueInput = "";
+    input.value = "";
+    valueInput2 = "";
+    input2.value = "";
+  }
   render();
 };
 
@@ -63,12 +78,13 @@ updateValue4 = (event) => {
   render();
 };
 
+//NewValue
 updateValueNew = (e) => {
   tempEdit = e.target.value;
 };
 
 updateValueNewDate = (e) => {
-  tempEditDate = e.target.value;
+  tempEditDateNew = e.target.value;
 };
 
 updateValueNew2 = (e) => {
@@ -80,17 +96,41 @@ onClickImgEdit = (index) => {
   render();
 };
 
-onClickSvgDelete = (index) => {
-  allCosts.splice(index, 1);
+onClickSvgDelete = async (index) => {
+  const resp = await fetch(
+    `http://localhost:8000/deleteCost?_id=${allCosts[index]._id}`,
+    {
+      method: "DELETE",
+    }
+  );
+  let result = await resp.json();
+  allCosts = result.data;
   render();
 };
 
-onClickImgDone = () => {
-  if (tempEdit === "") return alert("Введите текст");
-  if (!Number(tempEdit2)) return alert("Введите числовое значение");
-  allCosts[indexEdit].text = tempEdit;
-  allCosts[indexEdit].text2 = tempEditDate;
-  allCosts[indexEdit].text3 = tempEdit2;
+onClickImgDone = async (index) => {
+  let a2 = tempEdit.trim();
+  let b2 = tempEdit2.trim();
+  if (a2 === "") return alert("Введите текст");
+  if (!Number(b2)) return alert("Введите числовое значение");
+  if (String(b2).length > 8) return alert("Много цифр");
+
+  const { _id } = allCosts[indexEdit];
+  const resp = await fetch("http://localhost:8000/updateCost", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json;charset=utf-8",
+      "Access-Control-Allow_origin": "*",
+    },
+    body: JSON.stringify({
+      _id,
+      text: tempEdit,
+      text2: tempEditDateNew,
+      text3: tempEdit2,
+    }),
+  });
+  let result = await resp.json();
+  allCosts = result.data;
   indexEdit = -1;
   render();
 };
@@ -163,28 +203,60 @@ render = () => {
         text.setAttribute("ContentEditable", "True");
         text.innerText = item.text;
       };
-      text.onblur = () => {
+      text.onblur = async () => {
+        let textVal = text.innerText;
+        let a = textVal.trim();
+        if (a === "") return alert(" Введите текст");
         allCosts[index].text = text.innerText;
+
+        const resp = await fetch("http://localhost:8000/updateCost", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json;charset=utf-8",
+            "Access-Control-Allow_origin": "*",
+          },
+          body: JSON.stringify(allCosts[index]),
+        });
+        let result = await resp.json();
+        allCosts = result.data;
         render();
       };
       textName.appendChild(text);
+      container.appendChild(textName);
 
-      const text2 = document.createElement("p");
-      text2.className = "date-text";
-      text2.innerText = `${item.text2}`;
-      text2.ondblclick = () => {
-        text2.setAttribute("ContentEditable", "True");
-        text2.innerText = item.text2;
-      };
-      text2.onblur = () => {
-        if (!Number(text2.innerText)) {
-          text2.innerText = item.text2;
-          return alert("Введите числовое значение");
-        } else {
-          allCosts[index].text2 = text2.innerText;
+      //Date
+      if (tempEditDateNew2 === index) {
+        const dateInput2 = document.createElement("input");
+        dateInput2.addEventListener("change", updateValueNewClick);
+        dateInput2.className = "edit-text2";
+        dateInput2.type = "date";
+        dateInput2.value = tempEditDate;
+        dateInput2.onblur = async () => {
+          allCosts[index].text2 = tempEditDateNew2;
+          tempEditDateNew2 = "";
+          const resp = await fetch("http://localhost:8000/updateCost", {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json;charset=utf-8",
+              "Access-Control-Allow_origin": "*",
+            },
+            body: JSON.stringify(allCosts[index]),
+          });
+          let result = await resp.json();
+          allCosts = result.data;
           render();
-        }
-      };
+        };
+        container.appendChild(dateInput2);
+      } else {
+        const text2 = document.createElement("p");
+        text2.className = "date-text";
+        text2.innerText = `${item.text2}`;
+        text2.ondblclick = () => {
+          tempEditDateNew2 = index;
+          render();
+        };
+        container.appendChild(text2);
+      }
 
       const text3 = document.createElement("p");
       text3.className = "price-text";
@@ -193,23 +265,33 @@ render = () => {
         text3.setAttribute("ContentEditable", "True");
         text3.innerText = item.text3;
       };
-      text3.onblur = () => {
-        if (!Number(text3.innerText)) {
+      text3.onblur = async () => {
+        let num = text3.innerText;
+        let textNum = num.trim();
+        if (String(textNum).length > 8) return alert("Много цифр");
+        if (!Number(textNum)) {
           text3.innerText = item.text3;
           return alert("Введите числовое значение");
         } else {
-          allCosts[index].text3 = text3.innerText;
+          allCosts[index].text3 = textNum;
+          const resp = await fetch("http://localhost:8000/updateCost", {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json;charset=utf-8",
+              "Access-Control-Allow_origin": "*",
+            },
+            body: JSON.stringify(allCosts[index]),
+          });
+          let result = await resp.json();
+          allCosts = result.data;
           render();
         }
       };
+      container.appendChild(text3);
 
       const text4 = document.createElement("p");
       text4.className = "price-text2";
       text4.innerText = ` р.`;
-
-      container.appendChild(textName);
-      container.appendChild(text2);
-      container.appendChild(text3);
       container.appendChild(text4);
 
       //Edit-icon
@@ -217,7 +299,7 @@ render = () => {
       imgEdit.className = "far fa-edit svg-icon";
       imgEdit.onclick = () => {
         tempEdit = item.text;
-        tempEditDate = item.text2;
+        tempEditDateNew = item.text2;
         tempEdit2 = item.text3;
         onClickImgEdit(index);
       };
@@ -236,4 +318,8 @@ render = () => {
     totalCounter += Number(item.text3);
   });
   totalSum.innerText = `${totalCounter}`;
+};
+
+updateValueNewClick = (event) => {
+  tempEditDateNew2 = event.target.value;
 };
