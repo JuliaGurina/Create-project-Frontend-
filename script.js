@@ -1,13 +1,14 @@
 let allCosts = [];
 let valueInput = "";
 let valueInput2 = "";
-let indexEdit = -1;
+let indexEdit = null;
 let tempEdit = "";
 let tempEdit2 = "";
 let d = new Date().toISOString().slice(0, 10);
 let tempEditDate = d;
 let tempEditDateNew = "";
-let tempEditDateNew2 = null;
+let indexEdit2 = null;
+let tempEditDateNew2 = "";
 
 window.onload = async function init() {
   totalSum = document.getElementById("sum");
@@ -32,27 +33,25 @@ const onclickButton = async () => {
   if (a === "") return alert(" Введите текст");
   if (b === "") return alert(" Введите число");
   if (String(b).length > 8) return alert("Много цифр");
-  {
-    const resp = await fetch("http://localhost:8000/createCost", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json;charset=utf-8",
-        "Access-Control-Allow_origin": "*",
-      },
-      body: JSON.stringify({
-        text: valueInput,
-        text2: tempEditDate,
-        text3: valueInput2,
-      }),
-    });
-    let result = await resp.json();
-    allCosts.push(result.data);
+  const resp = await fetch("http://localhost:8000/createCost", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json;charset=utf-8",
+      "Access-Control-Allow_origin": "*",
+    },
+    body: JSON.stringify({
+      text: a,
+      text2: tempEditDate,
+      text3: b,
+    }),
+  });
+  let result = await resp.json();
+  allCosts.push(result.data);
 
-    valueInput = "";
-    input.value = "";
-    valueInput2 = "";
-    input2.value = "";
-  }
+  valueInput = "";
+  input.value = "";
+  valueInput2 = "";
+  input2.value = "";
   render();
 };
 
@@ -124,9 +123,9 @@ onClickImgDone = async (index) => {
     },
     body: JSON.stringify({
       _id,
-      text: tempEdit,
+      text: a2,
       text2: tempEditDateNew,
-      text3: tempEdit2,
+      text3: b2,
     }),
   });
   let result = await resp.json();
@@ -163,10 +162,10 @@ render = () => {
       const dateInput = document.createElement("input");
       dateInput.className = "edit-text2";
       dateInput.type = "date";
-      dateInput.value = tempEditDate;
       container.appendChild(dateInput);
 
-      const editInput2 = document.createElement("textarea");
+      const editInput2 = document.createElement("input");
+      editInput2.type = "number";
       editInput2.className = "edit-text3";
       editInput2.value = tempEdit2;
       container.appendChild(editInput2);
@@ -198,7 +197,7 @@ render = () => {
 
       const text = document.createElement("p");
       text.className = "shop-text";
-      text.innerText = ` "${item.text}"`;
+      text.innerText = `"${item.text}"`;
       text.ondblclick = () => {
         text.setAttribute("ContentEditable", "True");
         text.innerText = item.text;
@@ -207,8 +206,7 @@ render = () => {
         let textVal = text.innerText;
         let a = textVal.trim();
         if (a === "") return alert(" Введите текст");
-        allCosts[index].text = text.innerText;
-
+        allCosts[index].text = a;
         const resp = await fetch("http://localhost:8000/updateCost", {
           method: "PATCH",
           headers: {
@@ -225,15 +223,14 @@ render = () => {
       container.appendChild(textName);
 
       //Date
-      if (tempEditDateNew2 === index) {
+      if (indexEdit2 === index) {
         const dateInput2 = document.createElement("input");
         dateInput2.addEventListener("change", updateValueNewClick);
-        dateInput2.className = "edit-text2";
+        dateInput2.className = "edit-text-click";
         dateInput2.type = "date";
-        dateInput2.value = tempEditDate;
+        dateInput2.onchange = (event) => updateValueNewClick(event);
         dateInput2.onblur = async () => {
           allCosts[index].text2 = tempEditDateNew2;
-          tempEditDateNew2 = "";
           const resp = await fetch("http://localhost:8000/updateCost", {
             method: "PATCH",
             headers: {
@@ -244,6 +241,7 @@ render = () => {
           });
           let result = await resp.json();
           allCosts = result.data;
+          indexEdit2 = null;
           render();
         };
         container.appendChild(dateInput2);
@@ -252,7 +250,8 @@ render = () => {
         text2.className = "date-text";
         text2.innerText = `${item.text2}`;
         text2.ondblclick = () => {
-          tempEditDateNew2 = index;
+          tempEditDateNew2 = item.text2;
+          onClickEdit2(index);
           render();
         };
         container.appendChild(text2);
@@ -322,4 +321,9 @@ render = () => {
 
 updateValueNewClick = (event) => {
   tempEditDateNew2 = event.target.value;
+};
+
+onClickEdit2 = (index) => {
+  indexEdit2 = index;
+  render();
 };
