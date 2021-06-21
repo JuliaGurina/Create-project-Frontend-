@@ -40,9 +40,9 @@ const onclickButton = async () => {
       "Access-Control-Allow_origin": "*",
     },
     body: JSON.stringify({
-      text: a,
-      text2: tempEditDate,
-      text3: b,
+      shop: a,
+      isDate: tempEditDate,
+      price: b,
     }),
   });
   let result = await resp.json();
@@ -123,9 +123,9 @@ onClickImgDone = async (index) => {
     },
     body: JSON.stringify({
       _id,
-      text: a2,
-      text2: tempEditDateNew,
-      text3: b2,
+      shop: a2,
+      isDate: tempEditDateNew,
+      price: b2,
     }),
   });
   let result = await resp.json();
@@ -195,18 +195,18 @@ render = () => {
       textName.className = "name-text";
       textName.innerText = `• Магазин`;
 
-      const text = document.createElement("p");
-      text.className = "shop-text";
-      text.innerText = `"${item.text}"`;
-      text.ondblclick = () => {
-        text.setAttribute("ContentEditable", "True");
-        text.innerText = item.text;
+      const textShop = document.createElement("p");
+      textShop.className = "shop-text";
+      textShop.innerText = `"${item.shop}"`;
+      textShop.ondblclick = () => {
+        textShop.setAttribute("ContentEditable", "True");
+        textShop.innerText = item.shop;
       };
-      text.onblur = async () => {
-        let textVal = text.innerText;
+      textShop.onblur = async () => {
+        let textVal = textShop.innerText;
         let a = textVal.trim();
         if (a === "") return alert(" Введите текст");
-        allCosts[index].text = a;
+        allCosts[index].shop = a;
         const resp = await fetch("http://localhost:8000/updateCost", {
           method: "PATCH",
           headers: {
@@ -219,7 +219,7 @@ render = () => {
         allCosts = result.data;
         render();
       };
-      textName.appendChild(text);
+      textName.appendChild(textShop);
       container.appendChild(textName);
 
       //Date
@@ -230,7 +230,7 @@ render = () => {
         dateInput2.type = "date";
         dateInput2.onchange = (event) => updateValueNewClick(event);
         dateInput2.onblur = async () => {
-          allCosts[index].text2 = tempEditDateNew2;
+          allCosts[index].isDate = tempEditDateNew2;
           const resp = await fetch("http://localhost:8000/updateCost", {
             method: "PATCH",
             headers: {
@@ -246,33 +246,33 @@ render = () => {
         };
         container.appendChild(dateInput2);
       } else {
-        const text2 = document.createElement("p");
-        text2.className = "date-text";
-        text2.innerText = `${item.text2}`;
-        text2.ondblclick = () => {
-          tempEditDateNew2 = item.text2;
+        const textDate = document.createElement("p");
+        textDate.className = "date-text";
+        textDate.innerText = `${item.isDate}`;
+        textDate.ondblclick = () => {
+          tempEditDateNew2 = item.isDate;
           onClickEdit2(index);
           render();
         };
-        container.appendChild(text2);
+        container.appendChild(textDate);
       }
 
-      const text3 = document.createElement("p");
-      text3.className = "price-text";
-      text3.innerText = `${item.text3}`;
-      text3.ondblclick = () => {
-        text3.setAttribute("ContentEditable", "True");
-        text3.innerText = item.text3;
+      const textPrice = document.createElement("p");
+      textPrice.className = "price-text";
+      textPrice.innerText = `${item.price}`;
+      textPrice.ondblclick = () => {
+        textPrice.setAttribute("ContentEditable", "True");
+        textPrice.innerText = item.price;
       };
-      text3.onblur = async () => {
-        let num = text3.innerText;
+      textPrice.onblur = async () => {
+        let num = textPrice.innerText;
         let textNum = num.trim();
         if (String(textNum).length > 8) return alert("Много цифр");
         if (!Number(textNum)) {
-          text3.innerText = item.text3;
+          textPrice.innerText = item.price;
           return alert("Введите числовое значение");
         } else {
-          allCosts[index].text3 = textNum;
+          allCosts[index].price = textNum;
           const resp = await fetch("http://localhost:8000/updateCost", {
             method: "PATCH",
             headers: {
@@ -286,20 +286,20 @@ render = () => {
           render();
         }
       };
-      container.appendChild(text3);
+      container.appendChild(textPrice);
 
-      const text4 = document.createElement("p");
-      text4.className = "price-text2";
-      text4.innerText = ` р.`;
-      container.appendChild(text4);
+      const text = document.createElement("p");
+      text.className = "price-text2";
+      text.innerText = ` р.`;
+      container.appendChild(text);
 
       //Edit-icon
       const imgEdit = document.createElement("i");
       imgEdit.className = "far fa-edit svg-icon";
       imgEdit.onclick = () => {
-        tempEdit = item.text;
-        tempEditDateNew = item.text2;
-        tempEdit2 = item.text3;
+        tempEdit = item.shop;
+        tempEditDateNew = item.isDate;
+        tempEdit2 = item.price;
         onClickImgEdit(index);
       };
       container.appendChild(imgEdit);
@@ -314,7 +314,7 @@ render = () => {
     }
     content.appendChild(container);
     //Sum
-    totalCounter += Number(item.text3);
+    totalCounter += Number(item.price);
   });
   totalSum.innerText = `${totalCounter}`;
 };
